@@ -1,0 +1,327 @@
+#!/bin/bash
+
+
+
+dir=/opt/vmware/vfabric-tc-server-standard
+dir1=/opt/vmware
+
+#Find the PID for tc server instance if exists kill PID
+pid=$(ps aux | grep tc-server |grep -v grep | awk '{print $2}')
+if [ -n "$pid" ]; then
+    kill $pid
+    echo "$pid killed -Success"
+fi
+
+# If vmware dir doesn'r exist create ir
+
+if [[ ! -e $dir1 ]]; then
+    mkdir $dir1
+elif [[ ! -d $dir1 ]]; then
+    echo "$dir1 already exists but is not a directory" 1>&2
+fi
+
+
+# If vfabric-tc-server-standard directory exists then remove it
+    
+if [ -d "$dir" ]
+then
+    rm -rf $dir
+fi
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+HOST=$(uname -n)
+ARCH=$(uname -m)
+echo $ARCH
+echo $HOST
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+
+if [[ ${OS} = "redhat" && ${ARCH} = "i686" ]]
+then
+yum  install -y  vfabric-tc-server-standard.noarch
+
+
+echo $dir
+
+#Change the permission of directory to run rest of command as tcserver user
+chmod  -R 777 $dir
+# Create a tc server instance with name= server1 with tcserver user
+echo "create a instance with the name server1"
+
+su -l tcserver << EOF
+whoami
+
+# these variable need to get set in the context of the tcserver user
+case "$ARCH" in
+    x86_64) export JAVA_HOME=/common/jdks/16/jdk1.6.0_31
+            #export JAVA_HOME=/usr/lib/jvm/jdk1.7.0_25
+            #echo "$JAVA_HOME"
+         ;;
+      i686)export JAVA_HOME=/common/jdks/16/32bit/jdk1.6.0_20
+       echo "$JAVA_HOME"
+         ;;
+      # unnecessary, but adding a check to handle the unexpected
+      # gracefully. 
+      *) echo "Unexpected value when expecting ARCH: $ARCH"
+         exit 1 ;; 
+esac
+# Did the above export actually work?
+env | grep JAVA_HOME
+
+
+
+# Here's how I would have thought to do this, but it failed to allow the
+# JAVA_HOME to be set for this instance of the users shell, so it won't work.
+#su - tcserver -c "$dir/tcruntime-instance.sh create -i $dir  server1"
+
+$dir/tcruntime-instance.sh create -i $dir  server1
+# Start instance
+$dir/server1/bin/tcruntime-ctl.sh  start
+$dir/server1/bin/tcruntime-ctl.sh  status
+$dir/server1/bin/tcruntime-ctl.sh  stop
+$dir/server1/bin/tcruntime-ctl.sh  start
+$dir/server1/bin/tcruntime-ctl.sh  status
+EOF
+
+# Verify the catalina.out
+echo ".............Verifying tc_server Startup......."
+# this was able to run as the root user on my system not sure it will
+# on all sytems. Also, not sure if the status command is a reliable
+# indicator that tcserver is up and running
+
+$dir/server1/bin/tcruntime-ctl.sh  status
+
+
+
+#Getting a war file for an app deployment
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-faces.war"
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-mvc.war"
+
+# Copy the war file under webapp
+
+mv swf-booking-faces.war swf-booking-mvc.war $dir/server1/webapps
+sleep 50;
+
+export http_proxy=
+
+
+echo "........verify the war files are deployed........"
+find  /opt/vmware/vfabric-tc-server-standard/server1/webapps/ -type d -name swf-booking-* 
+sleep 30;
+echo "........Pinging the webpage swf-booking-mvc........"
+#status_line=`curl -i  -connect-timeout 5  http://localhost:8080/swf-booking-mvc  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-mvc" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+
+#echo "........Pinging the webpage swf-booking-faces........"
+#status_line=`curl -i   http://localhost:8080/swf-booking-faces  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-faces" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+elif [[ ${OS} = "redhat" && ${ARCH} = "x86_64" ]]
+then
+yum install -y vfabric-tc-server-standard.noarch
+#Change the permission of directory to run rest of command as tcserver user
+chmod -R 777 $dir
+# Create a tc server instance with name= server1 with tcserver user
+echo "create a instance with the name server1"
+
+su -l tcserver << EOF
+whoami
+
+# these variable need to get set in the context of the tcserver user
+case "$ARCH" in
+    x86_64) export JAVA_HOME=/common/jdks/16/jdk1.6.0_31
+            #export JAVA_HOME=/usr/lib/jvm/jdk1.7.0_25
+            #echo "$JAVA_HOME"
+         ;;
+      i686)export JAVA_HOME=/common/jdks/16/32bit/jdk1.6.0_20
+       echo "$JAVA_HOME"
+         ;;
+      # unnecessary, but adding a check to handle the unexpected
+      # gracefully.
+      *) echo "Unexpected value when expecting ARCH: $ARCH"
+         exit 1 ;;
+esac
+# Did the above export actually work?
+env | grep JAVA_HOME
+
+
+
+# Here's how I would have thought to do this, but it failed to allow the
+# JAVA_HOME to be set for this instance of the users shell, so it won't work.
+#su - tcserver -c "$dir/tcruntime-instance.sh create -i $dir  server1"
+
+$dir/tcruntime-instance.sh create -i $dir  server1
+# Start instance
+$dir/server1/bin/tcruntime-ctl.sh  start
+$dir/server1/bin/tcruntime-ctl.sh  status
+$dir/server1/bin/tcruntime-ctl.sh  stop
+$dir/server1/bin/tcruntime-ctl.sh  start
+$dir/server1/bin/tcruntime-ctl.sh  status
+EOF
+
+# Verify the catalina.out
+echo ".............Verifying tc_server Startup......."
+# this was able to run as the root user on my system not sure it will
+# on all sytems. Also, not sure if the status command is a reliable
+# indicator that tcserver is up and running
+$dir/server1/bin/tcruntime-ctl.sh  status
+
+
+
+#Getting a war file for an app deployment
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-faces.war"
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-mvc.war"
+
+# Copy the war file under webapp
+
+mv swf-booking-faces.war swf-booking-mvc.war $dir/server1/webapps
+sleep 50;
+
+export http_proxy=
+
+echo "........verify the war files are deployed........"
+find  /opt/vmware/vfabric-tc-server-standard/server1/webapps/ -type d -name swf-booking-*
+sleep 30;
+echo "........Pinging the webpage swf-booking-mvc........"
+#status_line=`curl -i  -connect-timeout 5  http://localhost:8080/swf-booking-mvc  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-mvc" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+
+#echo "........Pinging the webpage swf-booking-faces........"
+#status_line=`curl -i   http://localhost:8080/swf-booking-faces  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-faces" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+ 
+else
+
+apt-get  install -y vfabric-tc-server-standard
+#Change the permission of directory to run rest of command as tcserver user
+chmod  -R 777 $dir
+# Create a tc server instance with name= server1 with tcserver user
+echo "create a instance with the name server1"
+
+su -l tcserver << EOF
+whoami
+
+# these variable need to get set in the context of the tcserver user
+case "$ARCH" in
+    x86_64) export JAVA_HOME=/common/jdks/16/jdk1.6.0_31
+            #export JAVA_HOME=/usr/lib/jvm/jdk1.7.0_25
+            #echo "$JAVA_HOME"
+         ;;
+      i686)export JAVA_HOME=/common/jdks/16/32bit/jdk1.6.0_20
+       echo "$JAVA_HOME"
+         ;;
+      # unnecessary, but adding a check to handle the unexpected
+      # gracefully.
+      *) echo "Unexpected value when expecting ARCH: $ARCH"
+         exit 1 ;;
+esac
+# Did the above export actually work?
+env | grep JAVA_HOME
+
+
+
+# Here's how I would have thought to do this, but it failed to allow the
+# JAVA_HOME to be set for this instance of the users shell, so it won't work.
+#su - tcserver -c "$dir/tcruntime-instance.sh create -i $dir  server1"
+
+$dir/tcruntime-instance.sh create -i $dir  server1
+# Start instance
+$dir/server1/bin/tcruntime-ctl.sh  start
+$dir/server1/bin/tcruntime-ctl.sh  status
+$dir/server1/bin/tcruntime-ctl.sh  stop
+$dir/server1/bin/tcruntime-ctl.sh  start
+$dir/server1/bin/tcruntime-ctl.sh  status
+EOF
+
+# Verify the catalina.out
+echo ".............Verifying tc_server Startup......."
+# this was able to run as the root user on my system not sure it will
+# on all sytems. Also, not sure if the status command is a reliable
+# indicator that tcserver is up and running
+$dir/server1/bin/tcruntime-ctl.sh  status
+
+
+
+#Getting a war file for an app deployment
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-faces.war"
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-mvc.war"
+
+# Copy the war file under webapp
+
+mv swf-booking-faces.war swf-booking-mvc.war $dir/server1/webapps
+sleep 50;
+
+export http_proxy=
+
+echo "........verify the war files are deployed........"
+find  /opt/vmware/vfabric-tc-server-standard/server1/webapps/ -type d -name swf-booking-*
+sleep 30;
+echo "........Pinging the webpage swf-booking-mvc........"
+#status_line=`curl -i  -connect-timeout 5  http://localhost:8080/swf-booking-mvc  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-mvc" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+
+#echo "........Pinging the webpage swf-booking-faces........"
+#status_line=`curl -i   http://localhost:8080/swf-booking-faces  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-faces" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+fi

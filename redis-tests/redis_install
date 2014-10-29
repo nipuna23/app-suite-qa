@@ -1,0 +1,100 @@
+#!/bin/bash
+
+#Find the PID for tc server instance if exists kill PID
+pid=$(ps aux | grep tc-server |grep -v grep | awk '{print $2}')
+if [ -n "$pid" ]; then
+    kill $pid
+    echo "$pid killed -Success"
+fi
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+HOST=$(uname -n)
+ARCH=$(uname -m)
+echo $ARCH
+echo $HOST
+
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+
+if [[ ${OS} = "redhat" && ${ARCH} = "i686" ]]
+then
+
+echo "UnSupported OS"
+
+
+elif [[ ${OS} = "redhat" && ${ARCH} = "x86_64" ]]
+then
+yum install -y pivotal-redis.x86_64
+# Start Redis  Server
+service pivotal-redis-6379  start
+
+# Status Redis Server
+service pivotal-redis-6379 status
+
+# Stop  Redis Server
+service pivotal-redis-6379 stop
+
+# Start Redis  Server
+service pivotal-redis-6379  start
+
+# Command line Redis
+cd /opt/pivotal/pivotal-redis/bin
+
+su -l p-redis  << EOF
+whoami
+cd /opt/pivotal/pivotal-redis/bin
+./redis-cli
+
+PING
+exit
+EOF
+
+# Stop  Redis Server
+service pivotal-redis-6379 stop 
+
+# Start Redis  Server
+service pivotal-redis-6379  start
+
+else
+
+apt-get install -y pivotal-redis
+
+
+# Start Redis  Server
+start pivotal-redis-6379
+
+# Redis Server Status
+status pivotal- redis-6379
+
+
+# Command line Redis
+cd /opt/pivotal/pivotal-redis/bin
+
+#./redis-cli
+#PING
+
+#exit
+
+su -l p-redis  << EOF
+whoami
+cd /opt/pivotal/pivotal-redis/bin
+./redis-cli
+
+PING
+exit
+EOF
+
+
+# Stop  Redis  Server
+stop  pivotal-redis-6379
+
+# Start Redis  Server
+start pivotal-redis-6379
+
+# Redis Server Status
+status pivotal-redis-6379
+
+
+fi

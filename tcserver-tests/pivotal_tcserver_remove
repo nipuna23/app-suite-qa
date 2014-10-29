@@ -1,0 +1,30 @@
+#!/bin/bash
+Package=pivotal-tc-server-standard
+
+#Find the PID for tc server instance if exists kill PID
+pid=$(ps aux | grep tc-server |grep -v grep | awk '{print $2}')
+if [ -n "$pid" ]; then
+    kill $pid
+    echo "$pid killed -Success"
+fi
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+ARCH=$(uname -m)
+echo $ARCH
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+if [[ ${OS} = "redhat" && ${ARCH} = "i686" ]]
+then
+rpm -e $Package
+
+elif [[ ${OS} = "redhat" && ${ARCH} = "x86_64" ]]
+then
+
+rpm -e $Package
+
+else
+apt-get purge -y  $Package
+fi
+

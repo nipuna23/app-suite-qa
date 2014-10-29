@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#Find the PID for web  server instance if exists kill PID
+pid=$(ps aux | grep webserver |grep -v grep | awk '{print $2}')
+if [ -n "$pid" ]; then
+    kill $pid
+    echo "$pid killed -Success"
+fi
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+ARCH=$(uname -m)
+echo $ARCH
+#version=5.4.3-3
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+if [[ ${OS} = "redhat" && ${ARCH} = "i686" ]]
+then
+#rpm -e pivotal-web-server-$version
+rpm -e pivotal-web-server
+
+
+elif [[ ${OS} = "redhat" && ${ARCH} = "x86_64" ]]
+then
+
+#rpm -e pivotal-web-server-$version
+rpm -e pivotal-web-server
+
+else
+apt-get purge -y  pivotal-web-server
+fi
+

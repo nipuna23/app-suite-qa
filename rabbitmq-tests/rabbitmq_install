@@ -1,0 +1,105 @@
+#!/bin/bash
+
+
+HOST=$(uname -n)
+ARCH=$(uname -m)
+echo $ARCH
+echo $HOST
+
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+
+if [[ ${OS} = "redhat" && ${ARCH} = "i686" ]]
+then
+yum install -y pivotal-rabbitmq-server
+yum install -y pivotal-rabbitmq-java-client-bin.noarch
+
+# Start Rabbitmq Server
+
+/sbin/service rabbitmq-server start
+
+# Enable Management Plugin
+cd /opt/pivotal/rabbitmq/bin
+
+./rabbitmq-plugins enable rabbitmq_management
+
+# Restart Rabbitmq Server
+
+/sbin/service rabbitmq-server restart
+
+
+status_line=`curl -sL -w "%{http_code}\\n" "http://guest:guest@localhost:15672/#/" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+
+elif [[ ${OS} = "redhat" && ${ARCH} = "x86_64" ]]
+then
+yum install -y pivotal-rabbitmq-server
+yum install -y pivotal-rabbitmq-java-client-bin.noarch
+# Start Rabbitmq Server
+
+/sbin/service rabbitmq-server start
+
+# Enable Management Plugin
+cd /opt/pivotal/rabbitmq/bin
+
+./rabbitmq-plugins enable rabbitmq_management
+
+# Restart Rabbitmq Server
+
+/sbin/service rabbitmq-server restart
+status_line=`curl -sL -w "%{http_code}\\n" "http://guest:guest@localhost:15672" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+ 
+else
+
+apt-get install -y rabbitmq-server
+apt-get install -y pivotal-rabbitmq-java-client-bin
+
+
+# Start Rabbitmq Server
+
+invoke-rc.d rabbitmq-server start
+
+# Enable Management Plugin
+cd /opt/pivotal/rabbitmq/bin
+
+./rabbitmq-plugins enable rabbitmq_management
+
+# Restart Rabbitmq Server
+
+invoke-rc.d rabbitmq-server restart
+
+status_line=`curl -sL -w "%{http_code}\\n" "http://guest:guest@localhost:15672/#/" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+echo $HOST
+fi

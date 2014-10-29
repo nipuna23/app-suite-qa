@@ -1,0 +1,44 @@
+#!/bin/bash
+
+RELEASE=$(lsb_release -rs | cut -f1 -d.)
+if [[ `apt-get 2>&1` =~ command\ not ]] ;
+then
+    OS=redhat
+fi
+
+
+if [[ ${OS} = "redhat" && ${RELEASE} = "5" ]] ;
+then
+      #echo ""
+	wget -q -O - http://packages.pivotal.io/pub/rpm/rhel6/app-suite/app-suite-silent-installer | sh
+ elif  [[ ${OS} = "redhat" && ${RELEASE} = "6" ]] ;
+then
+	#echo ""
+   
+elif  [[ ${OS} != "redhat" && ${RELEASE} = "12" ]] ;
+then 
+	echo ""
+	echo "Importing Pivotal App Suite GPG key"
+	wget -q -O - http://packages.pivotal.io/pub/apt/ubuntu/DEB-GPG-KEY-PIVOTAL-APP-SUITE | apt-key add - > /dev/null 2>&1
+
+	echo "Installing Pivotal App Suite APT Repo configuration package"
+	wget -q -P /tmp http://packages.pivotal.io/pub/apt/ubuntu/pivotal-app-suite-repo-precise_1.0-5_all.deb > /dev/null 2>&1
+	dpkg -i /tmp/pivotal-app-suite-repo-precise_1.0-5_all.deb > /dev/null 2>&1
+	rm -f /tmp/pivotal-app-suite-repo-precise_1.0-5_all.deb > /dev/null 2>&1
+
+	/etc/pivotal/app-suite/pivotal-eula-acceptance.sh --accept_eula_file=Pivotal_Software_EULA--8.4.14.txt > /dev/null 2>&1
+
+else
+  echo ""
+        echo "Importing Pivotal App Suite GPG key"
+        wget -q -O - http://packages.pivotal.io/pub/apt/ubuntu/DEB-GPG-KEY-PIVOTAL-APP-SUITE | apt-key add - > /dev/null 2>&1
+
+        echo "Installing Pivotal App Suite APT Repo configuration package"
+        wget -q -P /tmp http://packages.pivotal.io/pub/apt/ubuntu/pivotal-app-suite-repo-lucid_1.0-5_all.deb > /dev/null 2>&1
+        dpkg -i /tmp/pivotal-app-suite-repo-lucid_1.0-5_all.deb > /dev/null 2>&1
+        rm -f /tmp/pivotal-app-suite-repo-lucid_1.0-5_all.deb > /dev/null 2>&1
+
+        /etc/pivotal/app-suite/pivotal-eula-acceptance.sh --accept_eula_file=Pivotal_Software_EULA--8.4.14.txt > /dev/null 2>&1 
+fi
+
+

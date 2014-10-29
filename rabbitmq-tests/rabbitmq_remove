@@ -1,0 +1,26 @@
+#!/bin/bash
+
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+ARCH=$(uname -m)
+echo $ARCH
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+if [[ ${OS} = "redhat" && ${ARCH} = "i686" ]]
+then
+rpm -e pivotal-rabbitmq-server-3.3.5-1
+rpm -e pivotal-rabbitmq-java-client-bin-3.3.5-1.noarch
+
+elif [[ ${OS} = "redhat" && ${ARCH} = "x86_64" ]]
+then
+
+rpm -e pivotal-rabbitmq-server-3.3.5-1
+rpm -e pivotal-rabbitmq-java-client-bin-3.3.5-1.noarch
+
+else
+apt-get purge -y rabbitmq-server
+apt-get purge -y pivotal-rabbitmq-java-client-bin
+fi
+

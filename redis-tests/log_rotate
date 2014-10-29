@@ -1,0 +1,39 @@
+#!/bin/bash
+
+Filename=/var/opt/pivotal/pivotal-redis/log/redis-6379.log.*.gz
+
+# Verify if redis is running
+pid=$(ps aux |grep  pivotal-redis |grep -v grep | awk '{print $2}')
+echo $pid
+        if [ -n "$pid" ]; then
+                echo "process is running ... hence continuing..."
+        else
+                 echo "Process is not there... Hence exiting..."
+                 exit
+        fi
+
+Edit conf file for log rotate
+
+	sed -i "/loglevel notice/ s/^/# /" /etc/opt/pivotal/pivotal-redis/redis-6379.conf 
+	sed -i "s/# loglevel notice/loglevel debug\n# loglevel notice/" /etc/opt/pivotal/pivotal-redis/redis-6379.conf
+
+# Stop/Start redis 6379  server
+	service pivotal-redis-6379 stop
+	service pivotal-redis-6379 start
+        service pivotal-redis-6379 status
+
+# benchmark command
+
+	timeout 20s /opt/pivotal/pivotal-redis/bin/redis-benchmark -l
+#verify 'log does not need rotating'
+	echo " verifying log does not need rotating"
+	logrotate -v /etc/logrotate.d/redis-6379
+# Force log file to rotate
+	logrotate -v -f /etc/logrotate.d/redis-6379
+# Verify *.gz file is created in a folder
+  if [[ -n $Filename ]];then
+	echo "file exists"
+	ls -la /var/opt/pivotal/pivotal-redis/log
+  else
+	echo "file doesn't exists xxxxxxxxxx"
+  fi

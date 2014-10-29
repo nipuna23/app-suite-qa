@@ -1,0 +1,145 @@
+#!/bin/bash
+
+export http_proxy="http://proxy.vmware.com:3128"
+export https_proxy="http://proxy.vmware.com:3128"
+export ftp_proxy="http://proxy.vmware.com:3128"
+
+#ipaddr="hostname -i | awk '{print $1}'"
+ipadd=ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{print $1}'
+
+dir=/opt/pivotal/webserver
+
+version=5.4.3-3
+
+#Find the PID for tc server instance if exists kill PID
+pid=$(ps aux | grep web-server |grep -v grep | awk '{print $2}')
+if [ -n "$pid" ]; then
+    kill $pid
+    echo "$pid killed -Success"
+fi
+
+# If webserver  directory exists then remove it
+
+if [ -d "$dir" ]
+then
+    rm -rf $dir
+fi
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+HOST=$(uname -n)
+ARCH=$(uname -m)
+echo $ARCH
+echo $HOST
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+
+if [[ ${OS} = "redhat" && ${ARCH} = "i686" ]]
+then
+#yum install -y pivotal-web-server
+
+ 
+#Verify older/all versions
+yum search pivotal-web-server --showduplicates 
+
+yum install -y pivotal-web-server-$version.i686
+
+# Create a instance
+
+cd $dir
+./newserver --quiet  myserver
+
+
+
+
+# Start Web  Server instance
+cd $dir/myserver/bin
+./httpdctl start
+
+# Check URL
+
+status_line=`curl -sL -w "%{http_code}\\n" "http://$ipadd:80" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+
+elif [[ ${OS} = "redhat" && ${ARCH} = "x86_64" ]]
+then
+#yum install -y pivotal-web-server
+
+#Verify older/all versions
+yum search pivotal-web-server --showduplicates
+yum install -y pivotal-web-server-$version.x86_64
+
+# Create a instance
+
+cd $dir
+./newserver --quiet myserver
+
+
+
+# Start Web  Server instance
+cd $dir/myserver/bin
+./httpdctl start
+
+# Check URL
+
+status_line=`curl -sL -w "%{http_code}\\n" "http://$ipadd:80" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+ 
+else
+
+apt-get install -y pivotal-web-server
+:'
+# Verify older/all versions
+
+apt-cache madison pivotal-web-server
+
+#Install specify version
+
+apt-get install -y pivotal-web-server=$version
+'
+# Create a instance
+
+cd $dir
+./newserver --quiet myserver
+
+
+
+# Start Web  Server instance
+cd $dir/myserver/bin
+./httpdctl start
+
+# Check URL
+
+status_line=`curl -sI -w "%{http_code}\\n" "http://$ipadd:80" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+
+
+
+fi
