@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Copyright (c) 2014 Pivotal Software, Inc. All Rights Reserved.
+
+# pivotal-app-suite-silent-installer-precise
+
+set -e
+
+if [ ! -x "/usr/bin/wget" ]; then
+   echo "wget not found in /usr/bin, unable to retrieve packages."
+   exit 1
+fi
+# Import GPG key
+wget -q -O - http://packages-staging.pivotal.io/pub/apt/ubuntu/DEB-GPG-KEY-PIVOTAL-APP-SUITE | apt-key add - > /dev/null 2>&1
+
+# fetch client repo configuration package
+wget -q -P /tmp http://packages-staging.pivotal.io/pub/apt/ubuntu/pivotal-app-suite-repo-precise-staging_1.0-5_all.deb
+
+# Install client repo configuration package
+dpkg -i /tmp/pivotal-app-suite-repo-precise-staging_1.0-5_all.deb > /dev/null 2>&1
+rm -f /tmp/pivotal-app-suite-repo-precise-staging_1.0-5_all.deb
+
+/etc/pivotal/app-suite/pivotal-eula-acceptance.sh --accept_eula_file=Pivotal_Software_EULA--8.4.14.txt > /dev/null 2>&1
+
+

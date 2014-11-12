@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# check if the first command line option is set/exists
+if [ -z "$1" ]; then
+   echo "Please provide command line argument"
+   exit
+fi
+
+REPO="$1"   # $1 is the first command line argument
+
+case $REPO in
+   prod) 
+	REPO_PREFIX=http://packages.pivotal.io
+	INSTALLER=app-suite-silent-installer
+	;;
+   staging) 
+	REPO_PREFIX=http://packages-staging.pivotal.io
+	INSTALLER=app-suite-silent-installer-staging
+	;;
+   *) echo "unknown repo: $REPO, exiting"; exit ;;
+esac
+
+
+RELEASE=$(lsb_release -rs | cut -f1 -d.)
+if [[ `apt-get 2>&1` =~ command\ not ]];
+then
+    OS=redhat
+fi
+
+
+if [[ ${OS} = "redhat" && ${RELEASE} = "5" ]] ;
+then
+  wget -q -O - $REPO_PREFIX/pub/rpm/rhel5/app-suite/${INSTALLER} | sh
+
+ elif  [[ ${OS} = "redhat" && ${RELEASE} = "6" ]] ;
+then
+   wget -q -O - $REPO_PREFIX/pub/rpm/rhel5/app-suite/${INSTALLER} | sh
+
+elif  [[ ${OS} != "redhat" && ${RELEASE} = "12" ]] ;
+then 
+   wget -q -O - ${REPO_PREFIX}/pub/apt/ubuntu/pivotal-app-suite-silent-installer-precise | sh	
+
+else
+   wget -q -O - ${REPO_PREFIX}/pub/apt/ubuntu/pivotal-app-suite-silent-installer-lucid | sh	
+fi
+
+

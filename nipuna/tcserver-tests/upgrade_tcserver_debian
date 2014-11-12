@@ -1,0 +1,183 @@
+#/bin/sh
+#! /usr/bin/expect -f
+
+#echo "PID"
+#netstat -na | egrep '8080|9090' | grep LISTEN
+((
+echo start
+#LOG_FILE=/home/root/shell/logs/`basename $0`_` date +'%Y.%m.%d.%H:%M'`.log
+dir=/opt/vmware/vfabric-tc-server-standard
+
+
+# Check the exit status
+checkStatus(){
+   echo "Checking status "
+   if [ $1 -ne 0 ];then
+       echo "Execution failed"
+       exit 1
+   fi
+}
+
+echo "................ OS  Version............."
+if [ -f /etc/lsb-release ]; then
+    cat  /etc/lsb-release
+    OS=$DISTRIB_ID
+    VER=$DISTRIB_RELEASE
+elif [ -f /etc/redhat-release ]; then
+     cat /etc/redhat-release
+
+else
+    OS=$(uname -s)
+    VER=$(uname -r)
+fi
+
+echo "................ ARCH  Version............."
+ARCH=$(uname -m)
+echo $ARCH
+
+case "$ARCH" in
+    x86_64) export JAVA_HOME=/common/jdks/16/jdk1.6.0_31
+    echo "$JAVA_HOME"
+         ;;
+      i686)export JAVA_HOME=/common/jdks/16/32bit/jdk1.6.0_20
+       echo "$JAVA_HOME"
+         ;;
+esac
+
+#Find the PID for tc server instance if exists kill PID
+pid=$(ps aux | grep tc-server |grep -v grep | awk '{print $2}')
+if [ -n "$pid" ]; then
+    kill $pid
+    echo "$pid killed -Success"
+fi
+
+
+#Clean repo 
+echo "..................Deleting Repo  ................."
+if [ "apt-cache search vfabric"  ]; then
+    echo "exists"
+    apt-get -y purge vfabric-repo-*
+else
+apt-cache search vfabric
+   echo "doesn't exists"
+fi
+
+#Clean tc-server install
+echo "..................Deleting tc server ................."
+if [ "apt-cache search vfabric" ]; then
+    echo "exists"
+    apt-get -y purge vfabric-tc-server-standard
+else
+apt-cache search vfabric
+   echo "doesn't exists"
+fi
+
+# If vfabric-tc-server-standard directory exists then remove it
+
+if [ -d "$dir" ]
+then
+    echo "Directory $dir  exists."
+    rm -rf `-d $dir`
+checkStatus $?
+fi
+
+
+
+#Install Dev Repo
+wget -q -O - http://appfabric-packages-dev.eng.vmware.com/pub/apt/ubuntu/vfabric-suite-installer | sh
+expect "[yes/no]"
+sleep 1
+send "yes\r"
+
+echo "................Search  vFabric Package............."
+apt-cache search vfabric
+
+echo "................Install tc-server............."
+apt-get -y install vfabric-tc-server-standard
+
+
+# Create a tc server instance with name= server1
+echo "create a instance with the name server1"
+
+$dir/tcruntime-instance.sh create -i $dir  server1
+# Start instance
+$dir/server1/bin/tcruntime-ctl.sh  start
+checkStatus $?
+
+# Verify the catalina.out
+echo ".............Verifying tc_server Startup......."
+#grep -o -m 1  "Server startup" /opt/vmware/vfabric-tc-server-standard/server1/logs/catalina.out
+grep  -m 1  "Server startup" $dir/server1/logs/catalina.out | awk '{ print $0 }'
+
+# Verify the tc-server version
+echo "...........Verifying tc_server version......."
+grep  -m 1  "RELEASE" $dir/README.txt | awk '{ print $0 }'
+
+#Getting a war file for an app deployment
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-faces.war"
+wget -q --no-check-certificate "http://static.springsource.org/spring-webflow/resources/samples/swf-booking-mvc.war"
+
+# Copy the war file under webapp
+
+mv swf-booking-faces.war swf-booking-mvc.war $dir/server1/webapps
+sleep 30;
+
+export http_proxy=
+
+
+#curl -s --head http://localhost:8080/swf-booking-mvc| head -n 1 | grep "HTTP/1.[01]"
+echo "........verify the war files are deployed........"
+find  /opt/vmware/vfabric-tc-server-standard/server1/webapps/ -type d -name swf-booking-*
+sleep 10;
+echo "........Pinging the webpage swf-booking-mvc........"
+#status_line=`curl -i  -connect-timeout 5  http://localhost:8080/swf-booking-mvc  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-mvc" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+sleep 10;
+
+#echo "........Pinging the webpage swf-booking-faces........"
+#status_line=`curl -i   http://localhost:8080/swf-booking-faces  2>/dev/null | head -n 1`
+status_line=`curl -sL -w "%{http_code}\\n" "http://localhost:8080/swf-booking-faces" -o /dev/null`
+status_code=`echo $status_line | awk '{print $0}'`
+echo "STATUS_CODE: ${status_code}"
+case "$status_code" in
+    200) echo 'Success!'
+         ;;
+      *) echo 'Fail!'
+         exit 1
+         ;;
+esac
+
+sleep 10;
+
+
+#Cleanup Dev  repo 
+echo "..................Deleting Repo  ................."
+if [ "apt-cache search vfabric" ]; then
+    echo "exists"
+    apt-get -y purge vfabric-repo-dev
+else
+apt-cache search vfabric
+   echo "doesn't exists"
+fi
+# Get qa repo
+wget -q -O - http://appfabric-packages-qa.eng.vmware.com/pub/apt/ubuntu/vfabric-suite-installer | sh
+apt-get -y  upgrade vfabric-tc-server-standard
+#
+# Verify the tc-server version
+echo "...........Verifying tc_server version......."
+grep  -m 1  "RELEASE" $dir/README.txt | awk '{ print $0 }'
+
+echo end
+) 2>&1) | tee /common/AppFabricPackaging/Ubuntu_12.0.4LTS/tc_server/`basename $0`_` date +'%Y.%m.%d.%H:%M'`.log
+
+

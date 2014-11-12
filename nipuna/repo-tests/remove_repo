@@ -1,0 +1,24 @@
+#!/bin/bash
+
+## Determine OS, if apt is present it's Debian-based, if not, then it's Red Hat-based.
+ARCH=$(uname -m)
+echo $ARCH
+if [[ `apt-get 2>&1` =~ command\ not ]]
+then
+    OS=redhat
+fi
+if [[ ${OS} = "redhat" ]]
+then
+rpm -qa | grep 'app-suite*'
+
+rpm -e $(rpm -qa | grep 'app-suite*')
+
+rpm -qa | grep 'app-suite*'
+
+
+else
+
+apt-cache search pivotal-app-suite-repo*
+apt-get -y purge pivotal-app-suite-repo*
+apt-cache search pivotal-app-suite-repo*
+fi

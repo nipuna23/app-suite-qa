@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Copyright 2014 Pivotal, Inc. All rights reserved.
+
+# app-suite-silent-installer
+
+rpm --import http://packages.gopivotal.com/pub/rpm/rhel5/app-suite/RPM-GPG-KEY-PIVOTAL-APP-SUITE-EL5 > /dev/null 2>&1
+
+rpm -ivf  http://packages.gopivotal.com/pub/rpm/rhel5/app-suite/app-suite-repo-1.0-4.noarch.rpm > /dev/null 2>&1
+
+/etc/pivotal/pivotal-eula-acceptance.sh --accept_eula_file=Pivotal_EULA.txt > /dev/null 2>&1
+
