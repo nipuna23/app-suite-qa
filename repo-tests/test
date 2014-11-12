@@ -1,0 +1,90 @@
+#!/bin/sh
+
+# repo_logic - detect supported platforms and provide the correct App Suite
+# installer link
+
+# Copyright (c) 2014 Pivotal Software, Inc. All Rights Reserved.
+
+LSB_RELEASE=/usr/bin/lsb_release
+
+configLucid () {
+   wget -q -O - http://packages-staging.pivotal.io/pub/apt/ubuntu/pivotal-app-suite-installer-lucid | sh
+}
+
+configPrecise () {
+   wget -q -O - http://packages-staging.pivotal.io/pub/apt/ubuntu/pivotal-app-suite-installer-precise | sh
+
+}
+
+configRH5 () {
+   wget -q -O - http://packages-staging.pivotal.io/pub/rpm/rhel5/app-suite/app-suite-installer-staging | sh
+}
+
+configRH6 () {
+   wget -q -O - http://packages-staging.pivotal.io/pub/rpm/rhel6/app-suite/app-suite-installer-staging | sh
+}
+
+unsupportedOS () {
+   echo ""
+   echo "Unsupported OS detected."
+   echo ""
+   echo "Supported systems include:"
+   echo "     Ubuntu 10.04 LTS and 12.04 LTS for amd64"
+   echo "     RHEL and CentOS 5 and 6 for both i686 and amd64"
+   echo ""
+   exit 1
+}
+
+
+# use lsb_release to determine client os and version
+if [ -x "$LSB_RELEASE" ]; then
+  OS=`$LSB_RELEASE -i | awk '{print $3}'`
+  OS_VER=`$LSB_RELEASE -r | awk '{print $2}'`
+
+  case $OS in
+    Ubuntu)
+      UNAME_M=`uname -m`
+      if [ "$UNAME_M" = "i686" ] || [ "$UNAME_M" = "i386" ]; then
+        # 32 bit Ubuntu is not supported
+        unsupportedOS
+      else
+        case $OS_VER in
+          10.04) configLucid ;;
+          12.04) configPrecise ;; 
+          *) unsupportedOS ;;
+        esac
+      fi
+      ;;
+    RedHat*|CentOS)
+      case $OS_VER in
+        6*) configRH6 ;;
+        5*) configRH5 ;;
+        *) unsupportedOS ;;
+      esac
+      ;;
+    *) unsupportedOS ;;
+  esac
+else
+  # lsb_release unavailable, try /etc/issue
+  if [ `grep -c ^Ubuntu /etc/issue` -gt "0" ]; then
+    # Check version of Ubuntu
+    UV=`cat /etc/issue | awk '{print $2}'`
+    case $UV in
+      10.04*) configLucid ;;
+      12.04*) configPrecise ;;
+      *) unsupportedOS ;;
+    esac  
+  elif [ `grep -c ^"Red Hat" /etc/issue` -gt "0" ] || [ `grep -c ^CentOS /etc/issue` -gt "0" ]; then
+    OS_VER=`cat /etc/redhat-release | sed s:\(.*\):: | awk '{print $NF}'`
+    case $OS_VER in
+      6*) configRH6 ;;
+      5*) configRH5 ;;
+      *) unsupportedOS ;;
+    esac
+  else
+    unsupportedOS
+  fi
+fi
+
+
+

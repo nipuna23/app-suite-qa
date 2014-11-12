@@ -18,7 +18,7 @@ rpm -qa | grep 'app-suite*'
 
 else
 
-apt-cache search app-suite*
-apt-get -y purge app-suite*
-apt-cache search app-suite*
+apt-cache search pivotal-app-suite-repo*
+apt-get -y purge pivotal-app-suite-repo*
+apt-cache search pivotal-app-suite-repo*
 fi
