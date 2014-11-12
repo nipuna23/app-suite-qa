@@ -1,0 +1,10 @@
+lpush mylist "Hello World"
+Object refcount mylist
+object encoding mylist
+object idletime mylist
+
+set foo 1000
+object encoding foo
+append foo bar
+get foo
+object encoding foo

@@ -1,0 +1,5 @@
+set mykey "This is a String"
+GETRANGE mykey 0 3
+GETRANGE mykey -3 -1
+GETRANGE mykey 0 -1
+GETRANGE mykey 10 100

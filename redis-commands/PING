@@ -1,0 +1,8 @@
+PING
+
+RANDOMKEY
+
+Set mykey "Nipuna"
+Rename  mykey myotherkey
+get myotherkey
+get mykey

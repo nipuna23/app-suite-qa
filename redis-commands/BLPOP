@@ -1,0 +1,5 @@
+del list1 list2
+rpush list a b c 
+blpop list1 list2 0
+
+

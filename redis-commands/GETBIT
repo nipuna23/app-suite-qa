@@ -1,0 +1,5 @@
+setbit mykey 7 1
+getbit mykey 0
+getbit mykey 1
+getbit mykey 7
+getbit mykey 100

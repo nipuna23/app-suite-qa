@@ -1,0 +1,26 @@
+#!/usr/bin/expect -f
+spawn /opt/pivotal/vfabric-redis/bin/redis-cli
+set timeout 5
+  expect "OK"
+  send "FlushALL\r"
+  expect "OK"
+  send "Append mykey Hello_Everyone!\r"
+  expect "OK"
+  send " Append mykey  Redis\r"
+  expect "OK"
+  send "Append mykey  _is\r"
+  expect "OK"
+  send "Append mykey  _fun!\r"
+  expect "OK"
+  send "get mykey\r"
+
+send "Set mykey fooba\r"
+ expect "OK"
+send "bitcount mykey\r"
+ expect "OK"
+send "bitcount mykey 0 0\r"
+ expect "OK"
+send "bitcount mykey 1 1\r" 
+ expect "OK"
+expect eof
+

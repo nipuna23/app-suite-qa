@@ -1,0 +1,13 @@
+set mykey 10
+INCR mykey
+INCR mykey
+INCR mykey
+INCR mykey
+INCR mykey
+get mykey
+INCRBY mykey 10
+get mykey
+set mykey 10.50
+INCRBYFLOAT mykey 0.1
+set mykey 5.0e3
+INCRBYFLOAT mykey 2.0e2

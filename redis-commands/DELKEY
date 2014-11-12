@@ -1,0 +1,8 @@
+set key3 Hello
+set key4 Redis
+set key5 delete
+MGET key3 key4 key5
+get  key3
+del key3 key4 key5
+get key3
+

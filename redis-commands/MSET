@@ -1,0 +1,4 @@
+MSET key11 'Hello11" Key12 "World12"
+GET Key11
+Get key12
+~         

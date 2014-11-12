@@ -1,0 +1,6 @@
+set key1 "foobar"
+set key2 "test"
+Bitop AND dest key1 key2
+get dest
+Bitop OR dest key1 key2
+get dest

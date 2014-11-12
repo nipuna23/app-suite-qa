@@ -1,0 +1,4 @@
+rpush messages "Hello how are you?"
+rpush messages "Fine thanks. I'm having fun with Redis"
+rpush messages "I should look into this NOSQL thing ASAP"
+lrange messages 0 2

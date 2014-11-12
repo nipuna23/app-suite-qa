@@ -1,0 +1,13 @@
+RPUSH mylist HELLO
+RPUSH mylist WORLD
+LINSERT mylist BEFORE "WORLD" "THERE"
+LRANGE mylist 0 -1
+
+
+RPUSH mylist one
+RPUSH mylist two
+RPUSH mylist three
+LPOP mylist
+LSET mylist 0 four
+Lset mylist -2 five
+LRANGE mylist 0 -2

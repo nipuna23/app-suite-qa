@@ -1,0 +1,22 @@
+#!/usr/bin/expect
+{
+set timeout 5
+
+spawn /opt/pivotal/vfabric-redis/bin/redis-cli
+expect "OK"
+send "set connections 10\r"
+#expect "11"
+send "INCR connections\r"
+#INCR connections
+#INCR connections
+#INCR connections
+#INCR connections
+#INCR connections
+#INCR connections
+#INCR connections
+#INCR connections
+#INCR connections
+#DEL connections
+#INCR connections
+expect eof
+}

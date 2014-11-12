@@ -1,0 +1,7 @@
+set resource:lock "Redis Demo"
+EXPIRE resource:lock 120
+TTL resource:lock
+TTL count
+set resource:lock "Redis Demo 2"
+TTL resource:lock
+PERSIST resource:lock

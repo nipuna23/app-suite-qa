@@ -1,0 +1,20 @@
+ZADD myzset 1 "one"
+ZADD myzset 1 "uno"
+ZADD myzset 2 "two"
+ZADD myzset 3 "two"
+ZRANGE myzset 0 -1 WITHSCORES
+ZCARD myzset
+ZCOUNT myzset -inf +inf
+ZRANK myzset "three"
+ZRANK myzset "two"
+ZSCORE myzset "one"
+
+
+
+
+
+
+
+
+
+

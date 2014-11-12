@@ -1,0 +1,14 @@
+#!/usr/bin/expect
+spawn /opt/pivotal/pivotal-redis/bin/redis-cli
+set timeout 5
+expect "OK"
+send "client list\r"
+expect "OK"
+send "client setname Test_Redis!\r"
+expect "OK"
+send "client getname\r"
+expect "OK"
+send "client list\r"
+expect "addr=127.0.0.1:54178 fd=5 name=Test_Redis! age=15 idle=0 flags=N db=0 sub=0 psub=0 multi=-1 qbuf=0 qbuf-free=32768 obl=0 oll=0 omem=0 events=r cmd=client"
+
+expect eof

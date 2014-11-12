@@ -1,0 +1,18 @@
+HSET myhash field1 "Hello"
+HSET myhash field2 "Redis"
+HKEYS myhash
+HLEN myhash
+HMGET myhash field1 field2 field4 field7 nofield
+
+HMSET myhash field1 Hello! field2 WORLD
+HGET myhash field1
+HGET myhash field2
+
+
+
+HSETNX myhash field "Hello"
+HSETNX myhash field "TEST"
+HGET myhash field
+HVALS myhash
+
+

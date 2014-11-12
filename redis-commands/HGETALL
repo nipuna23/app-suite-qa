@@ -1,0 +1,27 @@
+HSET myhash field4 foo
+HGET myhash field4
+HGET myhash filed5
+
+HSET myhash field1 Hello
+HSET myhash field2 world
+HGETALL myhash
+
+
+HSET myhash field7 bar
+HEXISTS myhash field7
+HEXISTS myhash field8
+
+
+HSET myhash field 25
+HINCRBY myhash field 1
+HINCRBY myhash field -1
+HINCRBY myhash field -25
+HINCRBY myhash field -25
+
+
+
+HSET mykey field 10.50
+HINCRBYFLOAT mykey field 0.1
+HSET mykey field 5.0e3
+HINCRBYFLOAT mykey 2.0e2
+

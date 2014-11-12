@@ -1,0 +1,7 @@
+#!/usr/bin/expect
+spawn /opt/pivotal/vfabric-redis/bin/redis-cli
+set timeout 5
+expect "OK"
+send "config get *max-*-entries*\r"
+expect "OK"
+send "config get *\r"

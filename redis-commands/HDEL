@@ -1,0 +1,3 @@
+HSET myhash field1 "foo"
+HDEL myhash field1
+HDEL myhash field2

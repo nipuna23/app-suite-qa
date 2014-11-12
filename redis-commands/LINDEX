@@ -1,0 +1,8 @@
+LPUSH mylist World
+LPUSH mylist Hello
+LINDEX mylist 0
+LINDEX mylist -1
+LINDEX mylist 9
+LLEN mylist
+
+

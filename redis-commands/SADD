@@ -1,0 +1,12 @@
+SADD myset "Hello"
+SADD myset "world"
+SADD myset "world"
+SMEMBERS myset
+SCARD myset
+SADD myotherset three
+SADD myotherset two
+SMOVE myset  myotherset world
+SMEMBERS myset
+SMEMBERS myotherset
+spop myset
+Smembers myset

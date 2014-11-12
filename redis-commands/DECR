@@ -1,0 +1,9 @@
+set mykey 50
+get mykey
+decr mykey
+DECRBY mykey  10
+set mykey 123423448480248048248484
+decr mykey
+set mykey Test
+decr mykey
+

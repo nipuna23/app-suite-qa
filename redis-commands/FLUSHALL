@@ -1,0 +1,4 @@
+set key5 Hello
+get key5
+flushall
+get key5
