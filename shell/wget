@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -x
+
+# a shell script used to download a specific url.
+
+DIR=/root/shell/test
+rm -rf $DIR/*
+
+# wget output file
+FILE=dailyinfo.`date +"%Y%m%d"`
+
+# wget log file
+LOGFILE=wget.log
+
+# wget download url
+URL=https://dist.springsource.com/release/TCS/vfabric-tc-server-standard-2.8.2.RELEASE.zip
+
+#NAME
+NAME=vfabric-tc-server-standard-2.8.2.RELEASE
+
+
+cd $DIR
+wget --no-check-certificate $URL -O $FILE -o $LOGFILE
+
+#INSTALL
+INSTALL=$DIR/$NAME
+# untar file
+cd $DIR
+echo $DIR
+unzip  $FILE
+pushd $INSTALL
+
+#Install
+#INSTALL=/root/shell/test/hyperic-hqee-installer-5.0.0
+#cd $INSTALL/installer/bin
+#sh hq-setup.sh
