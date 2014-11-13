@@ -1,0 +1,13 @@
+Would you like to install Insight agent in the current directory? (/root/perl/testdir/vfabric-tc-server-standard-2.9.1.RELEASE/myruntime) [Yn]:  y
+Is a java service wrapper used to start the server? [yN]:  n
+Detected a tcServer 2.9 Server, is this correct? [Yn]: y
+Would you like to continue with the installation? [Yn]: y
+Please select a transport protocol [Default:HTTP]: HTTP
+Please enter the Insight IP address or host name [Default:localhost]: vmc-ssrc-rh28
+Please enter the Insight port number [Default:8080]: 8080
+Please enter the Insight context path [Default:insight]: insight
+Please enter the Insight user name [Default:spring]: spring
+Please enter the Insight password [Default:insight]: insight
+Use JSON serialization [yN]: N
+Use proxy [yN]: N
+
